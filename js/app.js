@@ -181,8 +181,11 @@ function wireListButtons() {
 
     document.getElementById('preview-to').textContent = session.labEmail;
     document.getElementById('preview-subject').textContent = `Cronobacter Sampling Data — ${tripLabel}`;
+    const sampleLines = samples.map(s =>
+      `  • ${s.sampleId}  (${s.type})  ${s.date} ${s.time}  ${s.location || 'No location'}`
+    ).join('\n');
     document.getElementById('preview-body').textContent =
-      `Collector: ${session.collectorName}\n\nCSV data is pasted below. Copy the content between the dashes and save as a .csv file, or download it directly from the app using "Download CSV".\n\n---\n${csv}---`;
+      `Collector: ${session.collectorName}\nTrip: ${tripLabel}\n\n${samples.length} sample(s):\n${sampleLines}\n\nThe full data table and a downloadable CSV attachment will be included in the email.`;
     document.getElementById('email-preview-modal').classList.remove('hidden');
 
     document.getElementById('btn-preview-cancel').onclick = () => {
