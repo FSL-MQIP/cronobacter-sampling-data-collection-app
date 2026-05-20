@@ -2,10 +2,18 @@ import { savePhoto, getPhotosForSample, deletePhoto } from './photos-db.js';
 
 let _pendingPhotos = [];   // { id, blob, label, objectUrl } — held in memory until form saved
 let _pendingLabel = '';    // label set by tapping a label-btn before Add Photo
+let _abortController = null;
 
 export function initPhotosUI(sampleId, isSwab) {
+  // Revoke old object URLs and reset state
+  _pendingPhotos.forEach(p => URL.revokeObjectURL(p.objectUrl));
   _pendingPhotos = [];
   _pendingLabel = '';
+
+  // Cancel all event listeners from previous initPhotosUI call
+  if (_abortController) _abortController.abort();
+  _abortController = new AbortController();
+  const signal = _abortController.signal;
 
   const addBtn = document.getElementById('btn-add-photo');
   const fileInput = document.getElementById('photo-input');
@@ -33,13 +41,13 @@ export function initPhotosUI(sampleId, isSwab) {
       btn.classList.add('active');
       setTimeout(() => btn.classList.remove('active'), 1000);
       fileInput.click();
-    });
+    }, { signal });
   });
 
   addBtn.addEventListener('click', () => {
     _pendingLabel = '';
     fileInput.click();
-  });
+  }, { signal });
 
   fileInput.addEventListener('change', () => {
     Array.from(fileInput.files).forEach(file => {
@@ -49,7 +57,7 @@ export function initPhotosUI(sampleId, isSwab) {
       addThumb(thumbsDiv, id, url, _pendingLabel);
     });
     fileInput.value = '';
-  });
+  }, { signal });
 }
 
 function addThumb(container, id, url, label) {
@@ -63,8 +71,10 @@ function addThumb(container, id, url, label) {
   del.className = 'delete-photo';
   del.textContent = '×';
   del.addEventListener('click', () => {
+    const photo = _pendingPhotos.find(p => p.id === id);
+    if (photo?.objectUrl) URL.revokeObjectURL(photo.objectUrl);
     _pendingPhotos = _pendingPhotos.filter(p => p.id !== id);
-    deletePhoto(id).catch(() => {});
+    if (photo?.existing) deletePhoto(id).catch(() => {});
     wrap.remove();
   });
   wrap.appendChild(img);
@@ -74,7 +84,10 @@ function addThumb(container, id, url, label) {
 
 export async function persistPendingPhotos(sampleId) {
   for (const p of _pendingPhotos) {
-    await savePhoto(sampleId, p.id, p.blob, p.label);
+    if (!p.existing) {
+      await savePhoto(sampleId, p.id, p.blob, p.label);
+    }
+    URL.revokeObjectURL(p.objectUrl);
   }
   _pendingPhotos = [];
 }
