@@ -1,7 +1,7 @@
 {
   "name": "Cronobacter Sampling",
   "short_name": "CronoSample",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#2d6a4f",
