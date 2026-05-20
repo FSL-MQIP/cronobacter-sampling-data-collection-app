@@ -1,0 +1,86 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  background: #f5f5f5;
+  color: #222;
+  padding: 1rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+h1 { font-size: 1.4rem; margin-bottom: 1rem; color: #2d6a4f; }
+h3 { font-size: 1rem; margin: 1rem 0 0.5rem; }
+
+.hidden { display: none !important; }
+.view { padding-bottom: 2rem; }
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #444;
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+  background: #fff;
+}
+
+textarea { min-height: 70px; resize: vertical; }
+
+button {
+  display: inline-block;
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  background: #2d6a4f;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 0.25rem 0.25rem 0.25rem 0;
+}
+
+button:disabled { background: #aaa; cursor: default; }
+button.danger { background: #c0392b; }
+button.secondary { background: #555; }
+button.type-btn { background: #e0e0e0; color: #222; font-size: 1.1rem; padding: 1rem 1.5rem; }
+button.type-btn.active { background: #2d6a4f; color: #fff; }
+button.mic-btn { background: none; color: #2d6a4f; border: 1px solid #2d6a4f; padding: 0.4rem 0.7rem; font-size: 0.85rem; margin-top: 0.25rem; }
+button.label-btn { background: #e8f4f0; color: #2d6a4f; border: 1px solid #2d6a4f; font-size: 0.85rem; padding: 0.4rem 0.7rem; }
+
+#type-selector { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+
+.sample-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+.sample-card:hover { border-color: #2d6a4f; }
+.sample-card .sample-id { font-weight: 700; color: #2d6a4f; }
+.sample-card .sample-meta { font-size: 0.8rem; color: #666; margin-top: 0.25rem; }
+.sample-card .backup-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 6px; }
+.sample-card .backup-dot.sent { background: #27ae60; }
+.sample-card .backup-dot.pending { background: #e67e22; }
+
+#photo-thumbnails { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.thumb-wrap { position: relative; width: 80px; height: 80px; }
+.thumb-wrap img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
+.thumb-wrap .delete-photo { position: absolute; top: -4px; right: -4px; background: #c0392b; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 0.7rem; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; }
+
+#btn-new-sample { font-size: 1.1rem; width: 100%; margin-bottom: 1rem; }
+
+.status-msg { padding: 0.5rem; border-radius: 6px; font-size: 0.85rem; margin-top: 0.5rem; }
+.status-msg.success { background: #d4edda; color: #155724; }
+.status-msg.error { background: #f8d7da; color: #721c24; }

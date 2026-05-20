@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cronobacter Sampling</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+  <!-- View: Session Setup -->
+  <div id="view-session" class="view">
+    <h1>Session Setup</h1>
+    <form id="session-form">
+      <label>Collector full name
+        <input type="text" id="collectorName" required>
+      </label>
+      <label>Initials
+        <input type="text" id="initials" required maxlength="6">
+      </label>
+      <label>State (2-letter code)
+        <input type="text" id="state" required maxlength="2">
+      </label>
+      <label>Lab email
+        <input type="email" id="labEmail" value="kah357@cornell.edu" required>
+      </label>
+      <label>GAS Script URL
+        <input type="url" id="gasUrl" placeholder="https://script.google.com/macros/s/...">
+      </label>
+      <label>Starting # — Soil
+        <input type="number" id="startingSoil" value="1" min="1" required>
+      </label>
+      <label>Starting # — Swab
+        <input type="number" id="startingSwab" value="1" min="1" required>
+      </label>
+      <label>Starting # — Water
+        <input type="number" id="startingWater" value="1" min="1" required>
+      </label>
+      <button type="submit">Start Session</button>
+    </form>
+  </div>
+
+  <!-- View: Sample List -->
+  <div id="view-list" class="view hidden">
+    <h1>Samples</h1>
+    <div id="sample-list"></div>
+    <button id="btn-new-sample">+ New Sample</button>
+    <hr>
+    <button id="btn-download-csv">Download CSV</button>
+    <button id="btn-send-email" disabled>Send to Lab</button>
+    <button id="btn-clear-session" class="danger hidden">Clear Session</button>
+    <button id="btn-edit-session">Edit Session Setup</button>
+  </div>
+
+  <!-- View: Sample Form -->
+  <div id="view-form" class="view hidden">
+    <h1 id="form-title">New Sample</h1>
+    <!-- Type selector (shown only for new samples) -->
+    <div id="type-selector">
+      <button class="type-btn" data-type="soil">Soil</button>
+      <button class="type-btn" data-type="swab">Swab</button>
+      <button class="type-btn" data-type="water">Water</button>
+    </div>
+    <!-- Shared fields -->
+    <form id="sample-form" class="hidden">
+      <p><strong>Sample ID:</strong> <span id="display-sample-id"></span></p>
+      <label>Date <input type="date" id="f-date" required></label>
+      <label>Time (24h) <input type="time" id="f-time" required></label>
+      <label>Collector(s) <input type="text" id="f-collectors" required></label>
+      <label>Location <input type="text" id="f-location"></label>
+      <label>Latitude <input type="number" id="f-lat" step="any"></label>
+      <label>Longitude <input type="number" id="f-lon" step="any"></label>
+      <label>Ambient temp (°C) <input type="number" id="f-ambientTemp" step="0.1"></label>
+      <label>Precipitation
+        <select id="f-precipitation">
+          <option value="false">No</option>
+          <option value="true">Yes</option>
+        </select>
+      </label>
+      <label>Notes
+        <textarea id="f-notes"></textarea>
+        <button type="button" class="mic-btn" data-target="f-notes">🎤</button>
+      </label>
+
+      <!-- Water-only fields -->
+      <div id="water-fields" class="hidden">
+        <label>Water temp (°C) <input type="number" id="f-waterTemp" step="0.1"></label>
+        <label>Water body description
+          <textarea id="f-waterBodyDescription"></textarea>
+          <button type="button" class="mic-btn" data-target="f-waterBodyDescription">🎤</button>
+        </label>
+      </div>
+
+      <!-- Swab-only fields -->
+      <div id="swab-fields" class="hidden">
+        <label>Environment/surface description
+          <textarea id="f-surfaceDescription"></textarea>
+          <button type="button" class="mic-btn" data-target="f-surfaceDescription">🎤</button>
+        </label>
+        <label>Surface type
+          <select id="f-surfaceType">
+            <option value="">-- select --</option>
+            <option value="Metal">Metal</option>
+            <option value="Brick">Brick</option>
+            <option value="Wood">Wood</option>
+            <option value="Concrete">Concrete</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <div id="surface-type-other-wrap" class="hidden">
+          <label>Specify surface type
+            <input type="text" id="f-surfaceTypeOther">
+          </label>
+        </div>
+        <label>Cracks/crevices
+          <select id="f-cracksAndCrevices">
+            <option value="">-- select --</option>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </label>
+        <label>High traffic area
+          <select id="f-highTrafficArea">
+            <option value="">-- select --</option>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Photos -->
+      <div id="photos-section">
+        <h3>Photos</h3>
+        <!-- Swab-only suggested labels injected here by photos-ui.js -->
+        <div id="swab-photo-labels" class="hidden">
+          <button type="button" class="label-btn" data-label="Surface being swabbed">Surface being swabbed</button>
+          <button type="button" class="label-btn" data-label="Surrounding environment">Surrounding environment</button>
+          <button type="button" class="label-btn" data-label="Labeled sample bag">Labeled sample bag</button>
+        </div>
+        <button type="button" id="btn-add-photo">Add Photo</button>
+        <input type="file" id="photo-input" accept="image/*" capture="environment" multiple class="hidden">
+        <div id="photo-thumbnails"></div>
+      </div>
+
+      <button type="submit" id="btn-save-sample">Save Sample</button>
+      <button type="button" id="btn-cancel-form">Cancel</button>
+    </form>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</body>
+</html>
