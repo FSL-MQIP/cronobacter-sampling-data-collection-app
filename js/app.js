@@ -4,7 +4,7 @@ import { loadSamples, saveSample, clearAllSamples } from './storage.js';
 import { getCurrentPosition, reverseGeocode } from './geo.js';
 import { fetchWeather } from './weather.js';
 import { attachVoiceButton } from './voice.js';
-import { initPhotosUI, persistPendingPhotos } from './photos-ui.js';
+import { initPhotosUI, persistPendingPhotos, getPendingPhotos } from './photos-ui.js';
 import { enqueueBackup, scheduleFlush, uploadPhotosToGas } from './backup.js';
 import { samplesToCsv, downloadCsv, sendEmail } from './export.js';
 import { clearPhotosForSamples } from './photos-db.js';
@@ -344,17 +344,16 @@ function wireFormButtons() {
       photosDriveLink: editingId ? (loadSamples().find(s => s.id === editingId)?.photosDriveLink ?? '') : '',
     };
 
+    const photosToUpload = getPendingPhotos(); // capture before persist clears them
     try { await persistPendingPhotos(sampleId); } catch { /* IndexedDB unavailable — skip local photo storage */ }
     saveSample(sample);
 
     // Upload photos to Drive and queue sheet backup — both best-effort, never block save
     if (session.gasUrl) {
       try {
-        const { getPhotosForSample } = await import('./photos-db.js');
-        const photos = await getPhotosForSample(sampleId);
         const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
         const folderPath = `Cronobacter Sampling/${session.state}_${session.initials}_${today}/${sampleId}`;
-        const folderUrl = await uploadPhotosToGas(session.gasUrl, sampleId, photos, folderPath);
+        const folderUrl = await uploadPhotosToGas(session.gasUrl, sampleId, photosToUpload, folderPath);
         if (folderUrl) {
           sample.photosDriveLink = folderUrl;
           saveSample(sample);

@@ -95,3 +95,7 @@ export async function persistPendingPhotos(sampleId) {
 export function getPendingPhotoCount() {
   return _pendingPhotos.length;
 }
+
+export function getPendingPhotos() {
+  return [..._pendingPhotos];
+}
