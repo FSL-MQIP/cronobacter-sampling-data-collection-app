@@ -44,11 +44,19 @@ export function downloadCsv(content, filename) {
   URL.revokeObjectURL(url);
 }
 
-export async function sendEmail(publicKey, serviceId, templateId, { toEmail, collectorName, state, initials, date, csvContent }) {
-  await emailjs.send(serviceId, templateId, {
-    to_email: toEmail,
-    collector_name: collectorName,
-    trip_label: `${state}-${initials}-${date}`,
-    csv_content: csvContent,
-  }, { publicKey });
+export async function sendEmail(gasUrl, { toEmail, collectorName, state, initials, date, csvContent }) {
+  const res = await fetch(gasUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'sendEmail',
+      toEmail,
+      collectorName,
+      tripLabel: `${state}-${initials}-${date}`,
+      csvContent,
+    }),
+  });
+  if (!res.ok) throw new Error(`Email send failed: ${res.status}`);
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error || 'Email send failed');
 }

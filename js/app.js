@@ -158,8 +158,7 @@ function wireListButtons() {
     btn.disabled = true;
     btn.textContent = 'Sending…';
     try {
-      // Replace EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID with real values
-      await sendEmail('EMAILJS_PUBLIC_KEY', 'EMAILJS_SERVICE_ID', 'EMAILJS_TEMPLATE_ID', {
+      await sendEmail(session.gasUrl, {
         toEmail: session.labEmail,
         collectorName: session.collectorName,
         state: session.state,
