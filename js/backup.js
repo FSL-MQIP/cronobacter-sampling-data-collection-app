@@ -1,3 +1,5 @@
+import { loadSamples, saveSample } from './storage.js';
+
 const QUEUE_KEY = 'cronobacter_backup_queue';
 
 export function getQueue() {
@@ -27,6 +29,8 @@ export async function flushQueue(gasUrl) {
         body: JSON.stringify(entry),
       });
       dequeue(entry.id);
+      const sample = loadSamples().find(s => s.id === entry.id);
+      if (sample) saveSample({ ...sample, backupAttempted: true });
     } catch {
       break;
     }
