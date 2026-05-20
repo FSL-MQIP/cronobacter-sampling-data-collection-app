@@ -46,14 +46,14 @@ export async function markPhotoUploaded(photoId) {
   const db = await openDb();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
+    tx.oncomplete = resolve;
+    tx.onerror = e => reject(e.target.error);
     const store = tx.objectStore(STORE);
     const req = store.get(photoId);
     req.onsuccess = () => {
       const photo = req.result;
       if (photo) { photo.uploaded = true; store.put(photo); }
-      tx.oncomplete = resolve;
     };
-    tx.onerror = e => reject(e.target.error);
   });
 }
 
@@ -69,4 +69,8 @@ export async function clearPhotosForSamples(sampleIds) {
     };
     tx.onerror = e => reject(e.target.error);
   });
+}
+
+export function _resetDbForTests() {
+  _db = null;
 }

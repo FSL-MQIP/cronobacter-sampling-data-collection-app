@@ -1,5 +1,11 @@
+import { IDBFactory } from 'fake-indexeddb';
 import 'fake-indexeddb/auto';
-import { savePhoto, getPhotosForSample, deletePhoto, markPhotoUploaded, clearPhotosForSamples } from '../js/photos-db.js';
+import { savePhoto, getPhotosForSample, deletePhoto, markPhotoUploaded, clearPhotosForSamples, _resetDbForTests } from '../js/photos-db.js';
+
+beforeEach(() => {
+  global.indexedDB = new IDBFactory();
+  _resetDbForTests();
+});
 
 test('saves and retrieves photo for a sample', async () => {
   const blob = new Blob(['fake'], { type: 'image/jpeg' });
