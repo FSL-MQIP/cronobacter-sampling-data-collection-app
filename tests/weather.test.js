@@ -1,4 +1,3 @@
-import { jest } from '@jest/globals';
 import { fetchWeather } from '../js/weather.js';
 
 beforeEach(() => { global.fetch = jest.fn(); });
