@@ -44,8 +44,8 @@ export async function uploadPhotosToGas(gasUrl, sampleId, photos, folderPath) {
   if (!gasUrl || photos.length === 0) return null;
   let folderLink = null;
   for (const photo of photos) {
-    const base64 = await blobToBase64(photo.blob);
     try {
+      const base64 = await blobToBase64(photo.blob);
       const res = await fetch(gasUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

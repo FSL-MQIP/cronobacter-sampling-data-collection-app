@@ -323,7 +323,7 @@ function wireFormButtons() {
       cracksAndCrevices: currentType === 'swab' ? parseTriState(document.getElementById('f-cracksAndCrevices').value) : null,
       highTrafficArea: currentType === 'swab' ? parseTriState(document.getElementById('f-highTrafficArea').value) : null,
       backupAttempted: editingId ? (loadSamples().find(s => s.id === editingId)?.backupAttempted ?? false) : false,
-      photosDriveLink: '',
+      photosDriveLink: editingId ? (loadSamples().find(s => s.id === editingId)?.photosDriveLink ?? '') : '',
     };
 
     await persistPendingPhotos(sampleId);
