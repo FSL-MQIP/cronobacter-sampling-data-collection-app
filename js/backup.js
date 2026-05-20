@@ -23,7 +23,7 @@ export async function flushQueue(gasUrl) {
       await fetch(gasUrl, {
         method: 'POST',
         mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(entry),
       });
       dequeue(entry.id);
@@ -48,7 +48,7 @@ export async function uploadPhotosToGas(gasUrl, sampleId, photos, folderPath) {
       const base64 = await blobToBase64(photo.blob);
       const res = await fetch(gasUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           action: 'uploadPhoto',
           sampleId,
