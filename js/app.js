@@ -228,6 +228,9 @@ function openForm(type, existingSample = null) {
   currentType = type;
   editingId = existingSample ? existingSample.id : null;
   showView('view-form');
+  const saveBtn = document.getElementById('btn-save-sample');
+  saveBtn.disabled = false;
+  saveBtn.textContent = existingSample ? 'Update Sample' : 'Save Sample';
   document.getElementById('type-selector').classList.add('hidden');
   document.getElementById('form-header-sub').textContent =
     `${type.charAt(0).toUpperCase() + type.slice(1)} Sample`;
@@ -373,7 +376,7 @@ function wireFormButtons() {
           saveSample(sample);
         }
       } catch { /* photo upload failed — Drive link stays blank */ }
-      enqueueBackup(sample);
+      enqueueBackup({ ...sample, action: 'upsertRow' });
       scheduleFlush(session.gasUrl);
     }
 
