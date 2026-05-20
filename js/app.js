@@ -22,7 +22,7 @@ let _micAbortController = null;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
 
   const session = getSession();
   if (!session || !session.collectorName) {
@@ -344,23 +344,22 @@ function wireFormButtons() {
       photosDriveLink: editingId ? (loadSamples().find(s => s.id === editingId)?.photosDriveLink ?? '') : '',
     };
 
-    await persistPendingPhotos(sampleId);
+    try { await persistPendingPhotos(sampleId); } catch { /* IndexedDB unavailable — skip local photo storage */ }
     saveSample(sample);
 
-    // Upload photos to Drive (best effort — if CORS fails, Photos column stays blank)
+    // Upload photos to Drive and queue sheet backup — both best-effort, never block save
     if (session.gasUrl) {
-      const { getPhotosForSample } = await import('./photos-db.js');
-      const photos = await getPhotosForSample(sampleId);
-      const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
-      const folderPath = `Cronobacter Sampling/${session.state}_${session.initials}_${today}/${sampleId}`;
-      const folderUrl = await uploadPhotosToGas(session.gasUrl, sampleId, photos, folderPath);
-      if (folderUrl) {
-        sample.photosDriveLink = folderUrl;
-        saveSample(sample);
-      }
-    }
-
-    if (session.gasUrl) {
+      try {
+        const { getPhotosForSample } = await import('./photos-db.js');
+        const photos = await getPhotosForSample(sampleId);
+        const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+        const folderPath = `Cronobacter Sampling/${session.state}_${session.initials}_${today}/${sampleId}`;
+        const folderUrl = await uploadPhotosToGas(session.gasUrl, sampleId, photos, folderPath);
+        if (folderUrl) {
+          sample.photosDriveLink = folderUrl;
+          saveSample(sample);
+        }
+      } catch { /* photo upload failed — Drive link stays blank */ }
       enqueueBackup(sample);
       scheduleFlush(session.gasUrl);
     }
