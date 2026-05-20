@@ -48,6 +48,11 @@ body {
   text-transform: uppercase;
 }
 
+.view-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .view-header-title {
   font-weight: 900;
   font-size: 17px;
