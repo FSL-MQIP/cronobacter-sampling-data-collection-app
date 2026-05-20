@@ -172,31 +172,46 @@ function wireListButtons() {
     downloadCsv(csv, `samples_${session.state}_${session.initials}_${today}.csv`);
   });
 
-  document.getElementById('btn-send-email').addEventListener('click', async () => {
+  document.getElementById('btn-send-email').addEventListener('click', () => {
     const samples = loadSamples();
     const session = getSession();
     const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
     const csv = samplesToCsv(samples);
-    const btn = document.getElementById('btn-send-email');
-    btn.disabled = true;
-    btn.textContent = 'Sending…';
-    try {
-      await sendEmail(session.gasUrl, {
-        toEmail: session.labEmail,
-        collectorName: session.collectorName,
-        state: session.state,
-        initials: session.initials,
-        date: today,
-        csvContent: csv,
-      });
-      showStatus('Email sent!', 'success');
-      document.getElementById('btn-clear-session').classList.remove('hidden');
-    } catch (err) {
-      showStatus(`Send failed: ${err.message}`, 'error');
-    } finally {
-      btn.textContent = 'Send to Lab';
-      btn.disabled = !navigator.onLine;
-    }
+    const tripLabel = `${session.state}-${session.initials}-${today}`;
+
+    document.getElementById('preview-to').textContent = session.labEmail;
+    document.getElementById('preview-subject').textContent = `Cronobacter Sampling Data — ${tripLabel}`;
+    document.getElementById('preview-body').textContent =
+      `Collector: ${session.collectorName}\n\nCSV data is pasted below. Copy the content between the dashes and save as a .csv file, or download it directly from the app using "Download CSV".\n\n---\n${csv}---`;
+    document.getElementById('email-preview-modal').classList.remove('hidden');
+
+    document.getElementById('btn-preview-cancel').onclick = () => {
+      document.getElementById('email-preview-modal').classList.add('hidden');
+    };
+
+    document.getElementById('btn-preview-send').onclick = async () => {
+      document.getElementById('email-preview-modal').classList.add('hidden');
+      const btn = document.getElementById('btn-send-email');
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      try {
+        await sendEmail(session.gasUrl, {
+          toEmail: session.labEmail,
+          collectorName: session.collectorName,
+          state: session.state,
+          initials: session.initials,
+          date: today,
+          csvContent: csv,
+        });
+        showStatus('Email sent!', 'success');
+        document.getElementById('btn-clear-session').classList.remove('hidden');
+      } catch (err) {
+        showStatus(`Send failed: ${err.message}`, 'error');
+      } finally {
+        btn.textContent = 'Send to Lab';
+        btn.disabled = !navigator.onLine;
+      }
+    };
   });
 
   document.getElementById('btn-clear-session').addEventListener('click', async () => {

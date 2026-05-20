@@ -194,6 +194,23 @@
     </form>
   </div>
 
+  <!-- Email Preview Modal -->
+  <div id="email-preview-modal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">Email Preview</div>
+      <div class="modal-field"><span class="modal-label">To</span><span id="preview-to"></span></div>
+      <div class="modal-field"><span class="modal-label">Subject</span><span id="preview-subject"></span></div>
+      <div class="modal-field modal-body-field">
+        <span class="modal-label">Body</span>
+        <pre id="preview-body"></pre>
+      </div>
+      <div class="modal-actions">
+        <button id="btn-preview-cancel" class="btn-secondary">Cancel</button>
+        <button id="btn-preview-send">✉ Send</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
