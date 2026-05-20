@@ -47,7 +47,7 @@ export function downloadCsv(content, filename) {
 export async function sendEmail(gasUrl, { toEmail, collectorName, state, initials, date, csvContent }) {
   const res = await fetch(gasUrl, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({
       action: 'sendEmail',
       toEmail,
