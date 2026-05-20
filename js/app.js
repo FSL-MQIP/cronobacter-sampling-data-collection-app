@@ -1,6 +1,6 @@
 import { getSession, saveSession, deriveInitials, getNextNumber, clearSamplesFromSession } from './session.js';
 import { generateSampleId } from './sample-id.js';
-import { loadSamples, saveSample, clearAllSamples } from './storage.js';
+import { loadSamples, saveSample, deleteSample, clearAllSamples } from './storage.js';
 import { getCurrentPosition, reverseGeocode } from './geo.js';
 import { fetchWeather } from './weather.js';
 import { attachVoiceButton } from './voice.js';
@@ -131,8 +131,18 @@ function renderSampleList() {
         <div class="sample-type">${typeLabel}</div>
         <div class="sample-meta">${s.date} ${s.time} · ${s.location || 'No location'}</div>
       </div>
-      ${badge}
+      <div class="card-right">
+        ${badge}
+        <button class="btn-delete-sample" title="Delete sample">×</button>
+      </div>
     `;
+    card.querySelector('.btn-delete-sample').addEventListener('click', e => {
+      e.stopPropagation();
+      if (confirm(`Delete ${s.sampleId}?`)) {
+        deleteSample(s.id);
+        renderSampleList();
+      }
+    });
     card.addEventListener('click', () => openForm(s.type, s));
     container.appendChild(card);
   });
@@ -317,6 +327,10 @@ function wireFormButtons() {
 
   document.getElementById('sample-form').addEventListener('submit', async e => {
     e.preventDefault();
+    const saveBtn = document.getElementById('btn-save-sample');
+    if (saveBtn.disabled) return;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
     const session = getSession();
     const sampleId = document.getElementById('display-sample-id').textContent;
 
