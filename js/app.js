@@ -18,6 +18,7 @@ function showView(id) {
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentType = null;
 let editingId = null;   // null = new sample; string = editing existing
+let _micAbortController = null;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -76,11 +77,16 @@ function wireSessionForm() {
 
   document.getElementById('session-form').addEventListener('submit', e => {
     e.preventDefault();
+    const collectorName = document.getElementById('collectorName').value.trim();
+    if (!collectorName) {
+      alert('Please enter a collector name.');
+      return;
+    }
     const soil = parseInt(document.getElementById('startingSoil').value, 10);
     const swab = parseInt(document.getElementById('startingSwab').value, 10);
     const water = parseInt(document.getElementById('startingWater').value, 10);
     const session = {
-      collectorName: document.getElementById('collectorName').value.trim(),
+      collectorName,
       initials: document.getElementById('initials').value.trim().toUpperCase(),
       state: document.getElementById('state').value.trim().toUpperCase(),
       labEmail: document.getElementById('labEmail').value.trim(),
@@ -216,6 +222,7 @@ function openForm(type, existingSample = null) {
   if (existingSample) {
     fillFormFromSample(existingSample);
   } else {
+    document.getElementById('sample-form').reset();
     const num = getNextNumber(type);
     const sampleId = generateSampleId(session.state, session.initials, num, type);
     document.getElementById('display-sample-id').textContent = sampleId;
@@ -226,7 +233,6 @@ function openForm(type, existingSample = null) {
   }
 
   initPhotosUI(existingSample?.sampleId || null, type === 'swab');
-  wireMicButtons();
 }
 
 function fillFormFromSample(s) {
@@ -272,6 +278,8 @@ async function autoPopulateGeoWeather() {
 }
 
 function wireMicButtons() {
+  if (_micAbortController) _micAbortController.abort();
+  _micAbortController = new AbortController();
   document.querySelectorAll('.mic-btn').forEach(btn => {
     const target = btn.dataset.target;
     attachVoiceButton(btn, target);
@@ -279,6 +287,8 @@ function wireMicButtons() {
 }
 
 function wireFormButtons() {
+  wireMicButtons();
+
   document.querySelectorAll('.type-btn').forEach(btn => {
     btn.addEventListener('click', () => openForm(btn.dataset.type));
   });
@@ -312,7 +322,7 @@ function wireFormButtons() {
       surfaceTypeOther: currentType === 'swab' ? document.getElementById('f-surfaceTypeOther').value.trim() : '',
       cracksAndCrevices: currentType === 'swab' ? parseTriState(document.getElementById('f-cracksAndCrevices').value) : null,
       highTrafficArea: currentType === 'swab' ? parseTriState(document.getElementById('f-highTrafficArea').value) : null,
-      backupAttempted: false,
+      backupAttempted: editingId ? (loadSamples().find(s => s.id === editingId)?.backupAttempted ?? false) : false,
       photosDriveLink: '',
     };
 
@@ -332,8 +342,10 @@ function wireFormButtons() {
       }
     }
 
-    enqueueBackup(sample);
-    scheduleFlush(session.gasUrl);
+    if (session.gasUrl) {
+      enqueueBackup(sample);
+      scheduleFlush(session.gasUrl);
+    }
 
     showView('view-list');
     renderSampleList();
