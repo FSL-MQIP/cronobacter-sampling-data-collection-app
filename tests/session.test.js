@@ -26,3 +26,13 @@ test('getNextNumber returns correct counter and increments', () => {
   expect(getNextNumber('water')).toBe(2);
   expect(getSession().nextWater).toBe(3);
 });
+
+test('getNextNumber throws when no session exists', () => {
+  expect(() => getNextNumber('soil')).toThrow('No active session');
+});
+
+test('getNextNumber throws on unknown type', () => {
+  const session = { nextSoil: 3, nextSwab: 1, nextWater: 2, collectorName: '', initials: '', state: '', labEmail: '', gasUrl: '', startingSoil: 1, startingSwab: 1, startingWater: 1 };
+  saveSession(session);
+  expect(() => getNextNumber('unknown')).toThrow('Unknown sample type: unknown');
+});

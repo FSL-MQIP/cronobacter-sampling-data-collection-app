@@ -15,7 +15,9 @@ export function saveSession(session) {
 
 export function getNextNumber(type) {
   const session = getSession();
-  const counterKey = type === 'soil' ? 'nextSoil' : type === 'swab' ? 'nextSwab' : 'nextWater';
+  if (!session) throw new Error('No active session');
+  const counterKey = { soil: 'nextSoil', swab: 'nextSwab', water: 'nextWater' }[type];
+  if (!counterKey) throw new Error(`Unknown sample type: ${type}`);
   const num = session[counterKey];
   session[counterKey] = num + 1;
   saveSession(session);
@@ -24,8 +26,9 @@ export function getNextNumber(type) {
 
 export function updateCounters(type, value) {
   const session = getSession();
-  if (!session) return;
-  const counterKey = type === 'soil' ? 'nextSoil' : type === 'swab' ? 'nextSwab' : 'nextWater';
+  if (!session) throw new Error('No active session');
+  const counterKey = { soil: 'nextSoil', swab: 'nextSwab', water: 'nextWater' }[type];
+  if (!counterKey) throw new Error(`Unknown sample type: ${type}`);
   session[counterKey] = value;
   saveSession(session);
 }
