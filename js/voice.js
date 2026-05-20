@@ -15,7 +15,7 @@ export function attachVoiceButton(micBtn, targetId) {
     }
     recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = false;
 
     recognition.onstart = () => {
@@ -23,9 +23,14 @@ export function attachVoiceButton(micBtn, targetId) {
       micBtn.textContent = '⏹ Stop';
     };
     recognition.onresult = e => {
-      const transcript = e.results[0][0].transcript;
       const field = document.getElementById(targetId);
-      if (field) field.value += (field.value ? ' ' : '') + transcript;
+      if (!field) return;
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) {
+          const transcript = e.results[i][0].transcript;
+          field.value += (field.value ? ' ' : '') + transcript;
+        }
+      }
     };
     recognition.onend = () => {
       recording = false;
