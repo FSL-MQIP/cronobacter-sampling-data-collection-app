@@ -38,6 +38,8 @@ export function scheduleFlush(gasUrl) {
   window.addEventListener('online', () => flushQueue(gasUrl), { once: true });
 }
 
+// Unlike flushQueue which uses no-cors, photo uploads expect the GAS to return
+// Access-Control-Allow-Origin: * via ContentService, allowing us to read the folderUrl.
 export async function uploadPhotosToGas(gasUrl, sampleId, photos, folderPath) {
   if (!gasUrl || photos.length === 0) return null;
   let folderLink = null;

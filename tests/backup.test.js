@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { enqueueBackup, getQueue, dequeue, flushQueue } from '../js/backup.js';
+import { enqueueBackup, getQueue, dequeue, flushQueue, uploadPhotosToGas } from '../js/backup.js';
 
 beforeEach(() => localStorage.clear());
 
@@ -31,4 +31,21 @@ test('flushQueue stops on fetch error and keeps remaining items', async () => {
   enqueueBackup({ id: 'a', type: 'soil' });
   await flushQueue('https://example.com/gas');
   expect(getQueue()).toHaveLength(1);
+});
+
+test('uploadPhotosToGas posts photos and returns folderUrl', async () => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ success: true, folderUrl: 'https://drive.google.com/folder/abc' }),
+  });
+  const blob = new Blob(['fake'], { type: 'image/jpeg' });
+  const photos = [{ id: 'photo_001', blob, label: '' }];
+  const result = await uploadPhotosToGas('https://example.com/gas', 'NY-YJ-1_U_SL', photos, 'Cronobacter/test');
+  expect(result).toBe('https://drive.google.com/folder/abc');
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+});
+
+test('uploadPhotosToGas returns null when no gasUrl', async () => {
+  const result = await uploadPhotosToGas('', 'sample', [], 'path');
+  expect(result).toBeNull();
 });

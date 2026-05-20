@@ -9,7 +9,7 @@ const HEADERS = [
 function csvField(val) {
   if (val === null || val === undefined) return '';
   const s = String(val);
-  return (s.includes(',') || s.includes('"') || s.includes('\n'))
+  return (s.includes(',') || s.includes('"') || s.includes('\n') || s.includes('\r'))
     ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
@@ -29,7 +29,7 @@ export function samplesToCsv(samples) {
     ];
     rows.push(row.map(csvField).join(','));
   }
-  return rows.join('\r\n');
+  return rows.join('\r\n') + '\r\n';
 }
 
 export function downloadCsv(content, filename) {
