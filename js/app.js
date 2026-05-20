@@ -427,9 +427,11 @@ function showStatus(msg, type) {
   if (!el) {
     el = document.createElement('p');
     el.id = 'status-msg';
+    el.addEventListener('click', () => el.remove());
     document.getElementById('view-list').appendChild(el);
   }
   el.className = `status-msg ${type}`;
-  el.textContent = msg;
-  setTimeout(() => el.remove(), 4000);
+  el.textContent = msg + (type === 'error' ? ' (tap to dismiss)' : '');
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.remove(), type === 'error' ? 15000 : 4000);
 }
