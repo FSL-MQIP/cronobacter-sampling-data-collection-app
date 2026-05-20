@@ -44,3 +44,8 @@ test('clearAllSamples empties storage', () => {
   clearAllSamples();
   expect(loadSamples()).toEqual([]);
 });
+
+test('loadSamples returns empty array on corrupt storage', () => {
+  localStorage.setItem('cronobacter_samples', 'not-valid-json');
+  expect(loadSamples()).toEqual([]);
+});

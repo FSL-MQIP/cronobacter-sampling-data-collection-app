@@ -2,7 +2,14 @@ const KEY = 'cronobacter_samples';
 
 export function loadSamples() {
   const raw = localStorage.getItem(KEY);
-  return raw ? JSON.parse(raw) : [];
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw);
+  } catch {
+    console.error('cronobacter_samples corrupt — resetting');
+    localStorage.removeItem(KEY);
+    return [];
+  }
 }
 
 export function saveSample(sample) {
