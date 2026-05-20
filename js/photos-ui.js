@@ -1,0 +1,84 @@
+import { savePhoto, getPhotosForSample, deletePhoto } from './photos-db.js';
+
+let _pendingPhotos = [];   // { id, blob, label, objectUrl } — held in memory until form saved
+let _pendingLabel = '';    // label set by tapping a label-btn before Add Photo
+
+export function initPhotosUI(sampleId, isSwab) {
+  _pendingPhotos = [];
+  _pendingLabel = '';
+
+  const addBtn = document.getElementById('btn-add-photo');
+  const fileInput = document.getElementById('photo-input');
+  const labelWrap = document.getElementById('swab-photo-labels');
+  const thumbsDiv = document.getElementById('photo-thumbnails');
+
+  thumbsDiv.innerHTML = '';
+  labelWrap.classList.toggle('hidden', !isSwab);
+
+  // Load existing photos for edit mode
+  if (sampleId) {
+    getPhotosForSample(sampleId).then(photos => {
+      photos.forEach(p => {
+        const url = URL.createObjectURL(p.blob);
+        _pendingPhotos.push({ id: p.id, blob: p.blob, label: p.label, objectUrl: url, existing: true });
+        addThumb(thumbsDiv, p.id, url, p.label);
+      });
+    });
+  }
+
+  // Label shortcuts (swab only)
+  document.querySelectorAll('.label-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _pendingLabel = btn.dataset.label;
+      btn.classList.add('active');
+      setTimeout(() => btn.classList.remove('active'), 1000);
+      fileInput.click();
+    });
+  });
+
+  addBtn.addEventListener('click', () => {
+    _pendingLabel = '';
+    fileInput.click();
+  });
+
+  fileInput.addEventListener('change', () => {
+    Array.from(fileInput.files).forEach(file => {
+      const id = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      const url = URL.createObjectURL(file);
+      _pendingPhotos.push({ id, blob: file, label: _pendingLabel, objectUrl: url });
+      addThumb(thumbsDiv, id, url, _pendingLabel);
+    });
+    fileInput.value = '';
+  });
+}
+
+function addThumb(container, id, url, label) {
+  const wrap = document.createElement('div');
+  wrap.className = 'thumb-wrap';
+  wrap.dataset.photoId = id;
+  const img = document.createElement('img');
+  img.src = url;
+  img.alt = label || 'photo';
+  const del = document.createElement('button');
+  del.className = 'delete-photo';
+  del.textContent = '×';
+  del.addEventListener('click', () => {
+    _pendingPhotos = _pendingPhotos.filter(p => p.id !== id);
+    deletePhoto(id).catch(() => {});
+    wrap.remove();
+  });
+  wrap.appendChild(img);
+  wrap.appendChild(del);
+  container.appendChild(wrap);
+}
+
+export async function persistPendingPhotos(sampleId) {
+  for (const p of _pendingPhotos) {
+    await savePhoto(sampleId, p.id, p.blob, p.label);
+  }
+  _pendingPhotos = [];
+}
+
+export function getPendingPhotoCount() {
+  return _pendingPhotos.length;
+}
