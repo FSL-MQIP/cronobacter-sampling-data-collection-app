@@ -106,19 +106,32 @@ function renderSampleList() {
   const container = document.getElementById('sample-list');
   container.innerHTML = '';
 
+  const session = getSession();
+  if (session) {
+    const month = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    document.getElementById('list-header-title').textContent =
+      `${session.state} · ${session.initials} · ${month}`;
+  }
+
   if (samples.length === 0) {
-    container.innerHTML = '<p style="color:#666">No samples yet. Tap + New Sample.</p>';
+    container.innerHTML = '<p style="color:var(--text-mid);padding:0.5rem 0">No samples yet. Tap + New Sample.</p>';
   }
 
   samples.forEach(s => {
     const card = document.createElement('div');
     card.className = 'sample-card';
-    const dot = s.backupAttempted
-      ? '<span class="backup-dot sent" title="Backup sent"></span>'
-      : '<span class="backup-dot pending" title="Backup pending"></span>';
+    card.dataset.type = s.type;
+    const badge = s.backupAttempted
+      ? '<span class="badge recorded">✓ RECORDED</span>'
+      : '<span class="badge pending">⏳ PENDING</span>';
+    const typeLabel = s.type.charAt(0).toUpperCase() + s.type.slice(1);
     card.innerHTML = `
-      <div class="sample-id">${s.sampleId} ${dot}</div>
-      <div class="sample-meta">${s.date} ${s.time} · ${s.location || 'No location'}</div>
+      <div>
+        <div class="sample-id">${s.sampleId}</div>
+        <div class="sample-type">${typeLabel}</div>
+        <div class="sample-meta">${s.date} ${s.time} · ${s.location || 'No location'}</div>
+      </div>
+      ${badge}
     `;
     card.addEventListener('click', () => openForm(s.type, s));
     container.appendChild(card);
@@ -195,7 +208,8 @@ function openTypeSelector() {
   editingId = null;
   currentType = null;
   showView('view-form');
-  document.getElementById('form-title').textContent = 'New Sample — Select Type';
+  document.getElementById('form-header-sub').textContent = 'New Sample';
+  document.getElementById('display-sample-id').textContent = 'Select a Type';
   document.getElementById('type-selector').classList.remove('hidden');
   document.getElementById('sample-form').classList.add('hidden');
 }
@@ -205,7 +219,8 @@ function openForm(type, existingSample = null) {
   editingId = existingSample ? existingSample.id : null;
   showView('view-form');
   document.getElementById('type-selector').classList.add('hidden');
-  document.getElementById('form-title').textContent = existingSample ? `Edit ${type}` : `New ${type}`;
+  document.getElementById('form-header-sub').textContent =
+    `${type.charAt(0).toUpperCase() + type.slice(1)} Sample`;
 
   const form = document.getElementById('sample-form');
   form.classList.remove('hidden');
@@ -213,8 +228,7 @@ function openForm(type, existingSample = null) {
   document.getElementById('water-fields').classList.toggle('hidden', type !== 'water');
   document.getElementById('swab-fields').classList.toggle('hidden', type !== 'swab');
   document.getElementById('swab-photo-labels').classList.toggle('hidden', type !== 'swab');
-  const notesLabel = document.querySelector('label[for="f-notes"]');
-  if (notesLabel) notesLabel.closest('label').classList.toggle('hidden', type === 'swab');
+  document.getElementById('notes-section').classList.toggle('hidden', type === 'swab');
 
   const session = getSession();
 
@@ -287,6 +301,11 @@ function wireMicButtons() {
 
 function wireFormButtons() {
   wireMicButtons();
+
+  document.getElementById('btn-back').addEventListener('click', () => {
+    showView('view-list');
+    renderSampleList();
+  });
 
   document.querySelectorAll('.type-btn').forEach(btn => {
     btn.addEventListener('click', () => openForm(btn.dataset.type));
