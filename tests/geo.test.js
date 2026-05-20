@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { reverseGeocode } from '../js/geo.js';
+import { reverseGeocode, getCurrentPosition } from '../js/geo.js';
 
 beforeEach(() => {
   global.fetch = jest.fn();
@@ -27,4 +27,19 @@ test('reverseGeocode returns empty string if no display_name', async () => {
   global.fetch.mockResolvedValue({ ok: true, json: async () => ({}) });
   const result = await reverseGeocode(0, 0);
   expect(result).toBe('');
+});
+
+test('getCurrentPosition resolves with lat/lon on success', async () => {
+  global.navigator.geolocation = {
+    getCurrentPosition: (success) => {
+      success({ coords: { latitude: 40.7128, longitude: -74.006 } });
+    },
+  };
+  const result = await getCurrentPosition();
+  expect(result).toEqual({ lat: 40.7128, lon: -74.006 });
+});
+
+test('getCurrentPosition rejects when geolocation not supported', async () => {
+  global.navigator.geolocation = undefined;
+  await expect(getCurrentPosition()).rejects.toThrow('Geolocation not supported');
 });
