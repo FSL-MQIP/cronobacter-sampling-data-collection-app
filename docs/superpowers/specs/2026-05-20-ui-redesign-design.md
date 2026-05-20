@@ -9,7 +9,7 @@
 
 Redesign the app's HTML/CSS to fix the "crunched together" feel. No JS logic changes — purely visual/layout work on `index.html` and `css/styles.css`.
 
-**Chosen direction:** Fieldbook / Earthy — warm tones (`#fdf6e3` background, `#5c4033` brown header, `#f5e6c8` text), notebook feel, color-coded sample types.
+**Chosen direction:** Fieldbook / Earthy — warm tones (`#fdf6e3` background, `#5c4033` brown header, `#f5e6c8` text), notebook feel, color-coded sample types (sienna soil, dark gold swab, dusty blue water). Sample cards use warm cream background. Backup status badge labeled "Recorded" / "Pending".
 
 ---
 
@@ -34,9 +34,10 @@ Redesign the app's HTML/CSS to fix the "crunched together" feel. No JS logic cha
 | `--border-warm` | `#d4b896` | Input borders |
 | `--text-dark` | `#3e2723` | Primary body text |
 | `--text-mid` | `#795548` | Section labels, metadata |
-| `--soil-green` | `#8bc34a` | Soil sample accent + New Sample button + Save button |
-| `--swab-amber` | `#ff8f00` | Swab sample accent |
-| `--water-blue` | `#29b6f6` | Water sample accent |
+| `--soil-brown` | `#A0522D` | Soil sample accent (sienna) |
+| `--swab-gold` | `#B8860B` | Swab sample accent (dark gold) |
+| `--water-blue` | `#6B8FAB` | Water sample accent (dusty blue) |
+| `--card-bg` | `#fff8f0` | Sample card background (warm cream, not pure white) |
 
 ---
 
@@ -63,9 +64,9 @@ No changes to any other JS module.
 ### Sample List (`view-list`)
 
 - Sticky brown header showing trip label: e.g. "NY · YJ · May 2026" derived from session state/initials/date
-- Full-width green "+ NEW SAMPLE" button at top
-- Sample cards with color-coded left border (5px: green/amber/blue by type)
-- Per-card backup badge: green "✓ BACKED" or amber "⏳ PENDING"
+- Full-width brown "+ NEW SAMPLE" button at top
+- Sample cards with color-coded left border (5px) and warm cream background (`--card-bg`): sienna for soil, dark gold for swab, dusty blue for water
+- Per-card backup badge: cream "✓ RECORDED" (data uploaded to Google Sheet) or warm amber "⏳ PENDING" (not yet uploaded)
 - Bottom action row: 2-column grid — "⬇ Download CSV" (outlined) + "✉ Send to Lab" (filled brown)
 - "Edit Session Setup" as a small text link below the action row
 - "Clear Session" danger button hidden until all samples backed up (existing behavior preserved)
@@ -85,7 +86,7 @@ No changes to any other JS module.
   4. **🪨 SURFACE** (swab only) — Surface description, Surface type, Cracks/crevices, High traffic area
   5. **💧 WATER BODY** (water only) — Water temp, Water body description with mic button
   6. **📷 PHOTOS** — swab label buttons + Add Photo button + thumbnail grid
-- "SAVE SAMPLE" button: full-width, green (`--soil-green`)
+- "SAVE SAMPLE" button: full-width, brown (`--brown-dark`)
 - "Cancel" as a secondary text link below save
 
 ---
@@ -206,7 +207,7 @@ document.getElementById('list-header-title').textContent = `${session.state} · 
 
 | Button | Style |
 |---|---|
-| Primary (Save, Submit, New Sample) | Full-width, `border-radius:8px`, green or brown fill |
+| Primary (Save, Submit, New Sample) | Full-width, `border-radius:8px`, brown fill (`--brown-dark`) |
 | Secondary (Cancel, Edit Session) | Text link, `color: var(--text-mid)`, no background |
 | Download CSV | Outlined — white bg, brown border + text |
 | Send to Lab | Filled brown |
