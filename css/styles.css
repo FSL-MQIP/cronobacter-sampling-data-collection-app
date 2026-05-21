@@ -111,6 +111,16 @@ label {
 .form-section-body label:last-child,
 .field-pair label { margin-bottom: 0; }
 
+.hint {
+  text-transform: none;
+  font-weight: 400;
+  font-size: 11px;
+  letter-spacing: normal;
+  color: var(--text-mid);
+  opacity: 0.75;
+  margin-left: 4px;
+}
+
 input, textarea, select {
   width: 100%;
   padding: 10px 12px;
@@ -201,15 +211,6 @@ button.mic-btn {
   font-size: 0.8rem;
   margin-top: 4px;
   border-radius: 6px;
-}
-
-button.label-btn {
-  background: var(--cream);
-  color: var(--brown-dark);
-  border: 1px solid var(--border-warm);
-  font-size: 0.8rem;
-  padding: 0.4rem 0.75rem;
-  margin: 0 0.25rem 0.25rem 0;
 }
 
 /* ── Action Row ───────────────────────────────────────────────────────────── */

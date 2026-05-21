@@ -258,7 +258,7 @@ function openForm(type, existingSample = null) {
 
   document.getElementById('water-fields').classList.toggle('hidden', type !== 'water');
   document.getElementById('swab-fields').classList.toggle('hidden', type !== 'swab');
-  document.getElementById('swab-photo-labels').classList.toggle('hidden', type !== 'swab');
+  document.getElementById('swab-photo-hint').classList.toggle('hidden', type !== 'swab');
   document.getElementById('notes-section').classList.toggle('hidden', type === 'swab');
 
   const session = getSession();

@@ -113,7 +113,7 @@
       <div class="form-section" id="notes-section">
         <div class="form-section-label">📝 Notes</div>
         <div class="form-section-body">
-          <label>Notes
+          <label>Notes <span class="hint">(e.g., location description, vegetation)</span>
             <textarea id="f-notes"></textarea>
             <button type="button" class="mic-btn" data-target="f-notes">🎤</button>
           </label>
@@ -124,7 +124,7 @@
       <div class="form-section hidden" id="swab-fields">
         <div class="form-section-label">🪨 Surface</div>
         <div class="form-section-body">
-          <label>Environment/surface description
+          <label>Environment/surface description <span class="hint">(and approximate size of area that was swabbed)</span>
             <textarea id="f-surfaceDescription"></textarea>
             <button type="button" class="mic-btn" data-target="f-surfaceDescription">🎤</button>
           </label>
@@ -167,7 +167,7 @@
         <div class="form-section-label">💧 Water Body</div>
         <div class="form-section-body">
           <label>Water temp (°C) <input type="number" id="f-waterTemp" step="0.1"></label>
-          <label>Water body description
+          <label>Water body description <span class="hint">(e.g., depth, size, running/still)</span>
             <textarea id="f-waterBodyDescription"></textarea>
             <button type="button" class="mic-btn" data-target="f-waterBodyDescription">🎤</button>
           </label>
@@ -176,13 +176,8 @@
 
       <!-- Section 6: Photos -->
       <div class="form-section" id="photos-section">
-        <div class="form-section-label">📷 Photos</div>
+        <div class="form-section-label">📷 Photos <span class="hint hidden" id="swab-photo-hint">(surface being swabbed, surrounding environment)</span></div>
         <div class="form-section-body">
-          <div id="swab-photo-labels" class="hidden">
-            <button type="button" class="label-btn" data-label="Surface being swabbed">Surface being swabbed</button>
-            <button type="button" class="label-btn" data-label="Surrounding environment">Surrounding environment</button>
-            <button type="button" class="label-btn" data-label="Labeled sample bag">Labeled sample bag</button>
-          </div>
           <button type="button" id="btn-add-photo">Add Photo</button>
           <input type="file" id="photo-input" accept="image/*" capture="environment" multiple class="hidden">
           <div id="photo-thumbnails"></div>

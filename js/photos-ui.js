@@ -1,14 +1,12 @@
 import { savePhoto, getPhotosForSample, deletePhoto } from './photos-db.js';
 
 let _pendingPhotos = [];   // { id, blob, label, objectUrl } — held in memory until form saved
-let _pendingLabel = '';    // label set by tapping a label-btn before Add Photo
 let _abortController = null;
 
 export function initPhotosUI(sampleId, isSwab) {
   // Revoke old object URLs and reset state
   _pendingPhotos.forEach(p => URL.revokeObjectURL(p.objectUrl));
   _pendingPhotos = [];
-  _pendingLabel = '';
 
   // Cancel all event listeners from previous initPhotosUI call
   if (_abortController) _abortController.abort();
@@ -17,11 +15,11 @@ export function initPhotosUI(sampleId, isSwab) {
 
   const addBtn = document.getElementById('btn-add-photo');
   const fileInput = document.getElementById('photo-input');
-  const labelWrap = document.getElementById('swab-photo-labels');
+  const swabHint = document.getElementById('swab-photo-hint');
   const thumbsDiv = document.getElementById('photo-thumbnails');
 
   thumbsDiv.innerHTML = '';
-  labelWrap.classList.toggle('hidden', !isSwab);
+  swabHint.classList.toggle('hidden', !isSwab);
 
   // Load existing photos for edit mode
   if (sampleId) {
@@ -34,18 +32,7 @@ export function initPhotosUI(sampleId, isSwab) {
     });
   }
 
-  // Label shortcuts (swab only)
-  document.querySelectorAll('.label-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      _pendingLabel = btn.dataset.label;
-      btn.classList.add('active');
-      setTimeout(() => btn.classList.remove('active'), 1000);
-      fileInput.click();
-    }, { signal });
-  });
-
   addBtn.addEventListener('click', () => {
-    _pendingLabel = '';
     fileInput.click();
   }, { signal });
 
@@ -53,8 +40,8 @@ export function initPhotosUI(sampleId, isSwab) {
     Array.from(fileInput.files).forEach(file => {
       const id = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
       const url = URL.createObjectURL(file);
-      _pendingPhotos.push({ id, blob: file, label: _pendingLabel, objectUrl: url });
-      addThumb(thumbsDiv, id, url, _pendingLabel);
+      _pendingPhotos.push({ id, blob: file, label: '', objectUrl: url });
+      addThumb(thumbsDiv, id, url, '');
     });
     fileInput.value = '';
   }, { signal });
