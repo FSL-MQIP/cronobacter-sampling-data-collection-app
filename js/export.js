@@ -44,9 +44,14 @@ export function downloadCsv(content, filename) {
   URL.revokeObjectURL(url);
 }
 
+// Uses no-cors because Apps Script web apps redirect to script.googleusercontent.com,
+// and the redirected response often fails CORS even when the server ran successfully.
+// We can't read the response body, so a resolved fetch is treated as success; an actual
+// network failure (offline, DNS) still rejects and is surfaced to the user.
 export async function sendEmail(gasUrl, { toEmail, collectorName, state, initials, date, csvContent }) {
-  const res = await fetch(gasUrl, {
+  await fetch(gasUrl, {
     method: 'POST',
+    mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({
       action: 'sendEmail',
@@ -56,7 +61,4 @@ export async function sendEmail(gasUrl, { toEmail, collectorName, state, initial
       csvContent,
     }),
   });
-  if (!res.ok) throw new Error(`Email send failed: ${res.status}`);
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error || 'Email send failed');
 }
