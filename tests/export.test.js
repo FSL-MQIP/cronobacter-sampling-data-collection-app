@@ -16,11 +16,25 @@ test('CSV has correct headers', () => {
   const header = csv.split('\r\n')[0];
   expect(header).toBe(
     'SAMPLE-ID,DATE,TIME (24H),COLLECTOR(S),LOCATION,LATITUDE,LONGITUDE,' +
-    'AMBIENT TEMPERATURE (°C),PRECIPITATION,NOTES,' +
+    'NEAR WATER BODY,AMBIENT TEMPERATURE (°C),PRECIPITATION,NOTES,' +
     'WATER TEMPERATURE (°C),WATER BODY DESCRIPTION,' +
     'ENVIRONMENT/SURFACE DESCRIPTION,SURFACE TYPE,SURFACE TYPE (OTHER),' +
     'CRACKS/CREVICES,HIGH TRAFFIC AREA,PHOTOS'
   );
+});
+
+test('nearWaterBody formats as "Yes (detail)" / "Yes" / "No" / empty', () => {
+  const yesWithDetail = { ...soilSample, nearWaterBody: true, nearWaterBodyDetail: '~50 m from pond' };
+  expect(samplesToCsv([yesWithDetail])).toContain('Yes (~50 m from pond)');
+
+  const yesNoDetail = { ...soilSample, nearWaterBody: true, nearWaterBodyDetail: '' };
+  expect(samplesToCsv([yesNoDetail])).toMatch(/,Yes,/);
+
+  const no = { ...soilSample, nearWaterBody: false, nearWaterBodyDetail: '' };
+  expect(samplesToCsv([no])).toMatch(/,No,/);
+
+  // urban soil leaves it null — column is empty
+  expect(samplesToCsv([soilSample])).toMatch(/,,/);
 });
 
 test('soil row has correct values and empty swab/water cols', () => {

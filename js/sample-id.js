@@ -1,7 +1,10 @@
-const TYPE_CODES = { soil: 'U_SL', swab: 'U_SG', water: 'U_W' };
+const MODE_CODES = { urban: 'U', rural: 'R', natural: 'N' };
+const TYPE_CODES = { soil: 'SL', swab: 'SG', water: 'W' };
 
-export function generateSampleId(state, initials, number, type) {
-  const code = TYPE_CODES[type];
-  if (!code) throw new Error(`Unknown sample type: ${type}`);
-  return `${state}-${initials}-${number}_${code}`;
+export function generateSampleId(state, initials, number, type, mode = 'urban') {
+  const modeCode = MODE_CODES[mode];
+  if (!modeCode) throw new Error(`Unknown mode: ${mode}`);
+  const typeCode = TYPE_CODES[type];
+  if (!typeCode) throw new Error(`Unknown sample type: ${type}`);
+  return `${state}-${initials}-${number}_${modeCode}_${typeCode}`;
 }

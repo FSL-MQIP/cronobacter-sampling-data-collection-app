@@ -20,6 +20,25 @@ let currentType = null;
 let editingId = null;   // null = new sample; string = editing existing
 let _micAbortController = null;
 
+// Field hints differ by sampling environment per the 2025 protocols.
+const HINTS_BY_MODE = {
+  urban: {
+    notes: '(e.g., location description, vegetation)',
+    waterBodyDescription: '(e.g., depth, size, running/still)',
+    surfaceDescription: '(and approximate size of area that was swabbed)',
+  },
+  rural: {
+    notes: '(e.g., animal tracks/scat, surrounding area, dominant plants)',
+    waterBodyDescription: '(e.g., depth, size, running/still)',
+    surfaceDescription: '(and approximate size of area that was swabbed)',
+  },
+  natural: {
+    notes: '(e.g., animal tracks/scat, surrounding vegetation, dominant plants)',
+    waterBodyDescription: '(e.g., depth, size, running/still)',
+    surfaceDescription: '(and approximate size of area that was swabbed)',
+  },
+};
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
@@ -44,6 +63,7 @@ function prefillSessionForm(session) {
   document.getElementById('collectorName').value = session.collectorName || '';
   document.getElementById('initials').value = session.initials || '';
   document.getElementById('state').value = session.state || '';
+  document.getElementById('mode').value = session.mode || 'urban';
   document.getElementById('labEmail').value = session.labEmail || 'kah357@cornell.edu';
   document.getElementById('gasUrl').value = session.gasUrl || '';
   document.getElementById('startingSoil').value = session.startingSoil ?? 1;
@@ -89,6 +109,7 @@ function wireSessionForm() {
       collectorName,
       initials: document.getElementById('initials').value.trim().toUpperCase(),
       state: document.getElementById('state').value.trim().toUpperCase(),
+      mode: document.getElementById('mode').value,
       labEmail: document.getElementById('labEmail').value.trim(),
       gasUrl: document.getElementById('gasUrl').value.trim(),
       startingSoil: soil, startingSwab: swab, startingWater: water,
@@ -176,8 +197,9 @@ function wireListButtons() {
     const samples = loadSamples();
     const session = getSession();
     const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+    const modeUpper = (session.mode || 'urban').toUpperCase();
     const csv = samplesToCsv(samples);
-    const tripLabel = `${session.state}-${session.initials}-${today}`;
+    const tripLabel = `${session.state}-${session.initials}-${modeUpper}-${today}`;
 
     document.getElementById('preview-to').textContent = session.labEmail;
     document.getElementById('preview-subject').textContent = `Cronobacter Sampling Data — ${tripLabel}`;
@@ -201,9 +223,7 @@ function wireListButtons() {
         await sendEmail(session.gasUrl, {
           toEmail: session.labEmail,
           collectorName: session.collectorName,
-          state: session.state,
-          initials: session.initials,
-          date: today,
+          tripLabel,
           csvContent: csv,
         });
         showStatus('Email sent!', 'success');
@@ -240,6 +260,10 @@ function openTypeSelector() {
   document.getElementById('display-sample-id').textContent = 'Select a Type';
   document.getElementById('type-selector').classList.remove('hidden');
   document.getElementById('sample-form').classList.add('hidden');
+
+  // Swab is urban-only per the 2025 protocols.
+  const mode = getSession()?.mode || 'urban';
+  document.querySelector('.type-btn[data-type="swab"]').classList.toggle('hidden', mode !== 'urban');
 }
 
 function openForm(type, existingSample = null) {
@@ -262,13 +286,20 @@ function openForm(type, existingSample = null) {
   document.getElementById('notes-section').classList.toggle('hidden', type === 'swab');
 
   const session = getSession();
+  const mode = session.mode || 'urban';
+  // "Close to water body" is asked on the rural/natural soil datasheets, not urban.
+  document.getElementById('soil-context-fields').classList.toggle('hidden', !(type === 'soil' && mode !== 'urban'));
+  const hints = HINTS_BY_MODE[mode];
+  document.getElementById('hint-notes').textContent = hints.notes;
+  document.getElementById('hint-waterBodyDescription').textContent = hints.waterBodyDescription;
+  document.getElementById('hint-surfaceDescription').textContent = hints.surfaceDescription;
 
   if (existingSample) {
     fillFormFromSample(existingSample);
   } else {
     document.getElementById('sample-form').reset();
     const num = getNextNumber(type);
-    const sampleId = generateSampleId(session.state, session.initials, num, type);
+    const sampleId = generateSampleId(session.state, session.initials, num, type, mode);
     document.getElementById('display-sample-id').textContent = sampleId;
     document.getElementById('f-date').value = todayString();
     document.getElementById('f-time').value = nowTimeString();
@@ -293,6 +324,10 @@ function fillFormFromSample(s) {
   if (s.type === 'water') {
     document.getElementById('f-waterTemp').value = s.waterTemp ?? '';
     document.getElementById('f-waterBodyDescription').value = s.waterBodyDescription || '';
+  }
+  if (s.type === 'soil') {
+    document.getElementById('f-nearWaterBody').value = s.nearWaterBody != null ? String(s.nearWaterBody) : '';
+    document.getElementById('f-nearWaterBodyDetail').value = s.nearWaterBodyDetail || '';
   }
   if (s.type === 'swab') {
     document.getElementById('f-surfaceDescription').value = s.surfaceDescription || '';
@@ -375,6 +410,8 @@ function wireFormButtons() {
       surfaceTypeOther: currentType === 'swab' ? document.getElementById('f-surfaceTypeOther').value.trim() : '',
       cracksAndCrevices: currentType === 'swab' ? parseTriState(document.getElementById('f-cracksAndCrevices').value) : null,
       highTrafficArea: currentType === 'swab' ? parseTriState(document.getElementById('f-highTrafficArea').value) : null,
+      nearWaterBody: currentType === 'soil' && session.mode !== 'urban' ? parseTriState(document.getElementById('f-nearWaterBody').value) : null,
+      nearWaterBodyDetail: currentType === 'soil' && session.mode !== 'urban' ? document.getElementById('f-nearWaterBodyDetail').value.trim() : '',
       backupAttempted: editingId ? (loadSamples().find(s => s.id === editingId)?.backupAttempted ?? false) : false,
       photosDriveLink: editingId ? (loadSamples().find(s => s.id === editingId)?.photosDriveLink ?? '') : '',
     };
@@ -387,7 +424,8 @@ function wireFormButtons() {
     if (session.gasUrl) {
       try {
         const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
-        const folderPath = `Cronobacter Sampling/${session.state}_${session.initials}_${today}/${sampleId}`;
+        const modeUpper = (session.mode || 'urban').toUpperCase();
+        const folderPath = `Cronobacter Sampling/${session.state}_${session.initials}_${modeUpper}_${today}/${sampleId}`;
         const folderUrl = await uploadPhotosToGas(session.gasUrl, sampleId, photosToUpload, folderPath);
         if (folderUrl) {
           sample.photosDriveLink = folderUrl;

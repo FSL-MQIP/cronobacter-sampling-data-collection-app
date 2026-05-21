@@ -28,6 +28,13 @@
         <label>State (2-letter code)
           <input type="text" id="state" required maxlength="2">
         </label>
+        <label>Sampling environment
+          <select id="mode" required>
+            <option value="urban">Urban</option>
+            <option value="rural">Rural</option>
+            <option value="natural">Natural</option>
+          </select>
+        </label>
         <input type="hidden" id="labEmail" value="kah357@cornell.edu">
         <input type="hidden" id="gasUrl" value="https://script.google.com/macros/s/AKfycbzgbiz6z1Xogaf2Tgpn4bqC6NRa0LcjmxfWmYqXpgtSYixjAaMN1ZanMHaiT6Wd7QE8/exec">
         <input type="hidden" id="startingSoil" value="1">
@@ -109,11 +116,30 @@
         </div>
       </div>
 
+      <!-- Site context (rural/natural soil only) -->
+      <div class="form-section hidden" id="soil-context-fields">
+        <div class="form-section-label">🌳 Site Context</div>
+        <div class="form-section-body">
+          <div class="field-pair">
+            <label>Close to water body <span class="hint">(river, stream, pond)</span>
+              <select id="f-nearWaterBody">
+                <option value="">-- select --</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </label>
+            <label>Distance / description
+              <input type="text" id="f-nearWaterBodyDetail" placeholder="e.g., ~50 m from pond">
+            </label>
+          </div>
+        </div>
+      </div>
+
       <!-- Section 3: Notes (hidden for swab) -->
       <div class="form-section" id="notes-section">
         <div class="form-section-label">📝 Notes</div>
         <div class="form-section-body">
-          <label>Notes <span class="hint">(e.g., location description, vegetation)</span>
+          <label>Notes <span class="hint" id="hint-notes">(e.g., location description, vegetation)</span>
             <textarea id="f-notes"></textarea>
             <button type="button" class="mic-btn" data-target="f-notes">🎤</button>
           </label>
@@ -124,7 +150,7 @@
       <div class="form-section hidden" id="swab-fields">
         <div class="form-section-label">🪨 Surface</div>
         <div class="form-section-body">
-          <label>Environment/surface description <span class="hint">(and approximate size of area that was swabbed)</span>
+          <label>Environment/surface description <span class="hint" id="hint-surfaceDescription">(and approximate size of area that was swabbed)</span>
             <textarea id="f-surfaceDescription"></textarea>
             <button type="button" class="mic-btn" data-target="f-surfaceDescription">🎤</button>
           </label>
@@ -167,7 +193,7 @@
         <div class="form-section-label">💧 Water Body</div>
         <div class="form-section-body">
           <label>Water temp (°C) <input type="number" id="f-waterTemp" step="0.1"></label>
-          <label>Water body description <span class="hint">(e.g., depth, size, running/still)</span>
+          <label>Water body description <span class="hint" id="hint-waterBodyDescription">(e.g., depth, size, running/still)</span>
             <textarea id="f-waterBodyDescription"></textarea>
             <button type="button" class="mic-btn" data-target="f-waterBodyDescription">🎤</button>
           </label>

@@ -29,10 +29,11 @@ Example: `NY-KH-1_U_SL` = New York · K. H. · Sample #1 · Urban · Soil
 | Code | Meaning |
 |------|---------|
 | `SL` | Soil |
-| `SG` | Swab |
+| `SG` | Swab (urban only) |
 | `W`  | Water |
 | `U`  | Urban |
 | `R`  | Rural |
+| `N`  | Natural |
 
 ---
 
@@ -142,6 +143,7 @@ No build step — edit files directly and push. The service worker caches assets
 | Location (GPS + address) | ✓ | ✓ | ✓ |
 | Ambient temp / Precipitation | ✓ | ✓ | ✓ |
 | Notes (+ voice input) | ✓ | — | ✓ |
+| Close to water body (Y/N + detail) | rural/natural only | — | — |
 | Surface description (+ voice) | — | ✓ | — |
 | Surface type / Cracks / Traffic | — | ✓ | — |
 | Water temp | — | — | ✓ |
