@@ -111,6 +111,16 @@ label {
 .form-section-body label:last-child,
 .field-pair label { margin-bottom: 0; }
 
+/* min-width:0 lets the grid cell shrink below native input intrinsic width
+   (date/time inputs otherwise refuse to fit a narrow column on iOS).      */
+.field-pair label { min-width: 0; }
+
+/* Bottom-align inputs across the pair so labels with wrapped hints still
+   line up with single-line labels next to them.                          */
+.field-pair label > input,
+.field-pair label > select,
+.field-pair label > textarea { margin-top: auto; }
+
 .hint {
   text-transform: none;
   font-weight: 400;
