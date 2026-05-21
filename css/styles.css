@@ -147,6 +147,15 @@ input, textarea, select {
 
 textarea { min-height: 70px; resize: vertical; }
 
+/* iOS renders date/time in the user's locale (often 12h with AM/PM), which
+   overflows narrow grid cells at the default font size. Slightly smaller
+   font + tighter horizontal padding keeps the value inside the box.       */
+input[type="date"], input[type="time"] {
+  font-size: 0.95rem;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
 button {
   display: inline-block;

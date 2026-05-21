@@ -1,4 +1,4 @@
-const CACHE = 'crono-v6';
+const CACHE = 'crono-v7';
 const SHELL = [
   './', './index.html', './css/styles.css',
   './js/app.js', './js/sample-id.js', './js/session.js', './js/storage.js',
