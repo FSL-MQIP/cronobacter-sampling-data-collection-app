@@ -93,7 +93,10 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+  margin-bottom: 10px;
 }
+
+.form-section-body > .field-pair:last-child { margin-bottom: 0; }
 
 /* ── Labels & Inputs ──────────────────────────────────────────────────────── */
 label {

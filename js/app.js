@@ -4,10 +4,10 @@ import { loadSamples, saveSample, deleteSample, clearAllSamples } from './storag
 import { getCurrentPosition, reverseGeocode } from './geo.js';
 import { fetchWeather } from './weather.js';
 import { attachVoiceButton } from './voice.js';
-import { initPhotosUI, persistPendingPhotos, getPendingPhotos } from './photos-ui.js';
-import { enqueueBackup, scheduleFlush, uploadPhotosToGas } from './backup.js';
+import { initPhotosUI, persistPendingPhotos } from './photos-ui.js';
+import { enqueueBackup, scheduleFlush, uploadPhotosToGas, flushUnuploadedPhotos, buildPhotoFolderPath } from './backup.js';
 import { samplesToCsv, downloadCsv, sendEmail } from './export.js';
-import { clearPhotosForSamples } from './photos-db.js';
+import { clearPhotosForSamples, getPhotosForSample, markPhotoUploaded } from './photos-db.js';
 
 // ── View routing ──────────────────────────────────────────────────────────────
 function showView(id) {
@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     showView('view-list');
     renderSampleList();
+    // Retry any photo uploads left unfinished from a previous offline session.
+    scheduleFlush(session.gasUrl, session);
   }
 
   wireSessionForm();
@@ -416,24 +418,26 @@ function wireFormButtons() {
       photosDriveLink: editingId ? (loadSamples().find(s => s.id === editingId)?.photosDriveLink ?? '') : '',
     };
 
-    const photosToUpload = getPendingPhotos(); // capture before persist clears them
     try { await persistPendingPhotos(sampleId); } catch { /* IndexedDB unavailable — skip local photo storage */ }
     saveSample(sample);
 
     // Upload photos to Drive and queue sheet backup — both best-effort, never block save
     if (session.gasUrl) {
       try {
-        const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
-        const modeUpper = (session.mode || 'urban').toUpperCase();
-        const folderPath = `Cronobacter Sampling/${session.state}_${session.initials}_${modeUpper}_${today}/${sampleId}`;
-        const folderUrl = await uploadPhotosToGas(session.gasUrl, sampleId, photosToUpload, folderPath);
-        if (folderUrl) {
-          sample.photosDriveLink = folderUrl;
-          saveSample(sample);
+        const allPhotos = await getPhotosForSample(sampleId).catch(() => []);
+        const pending = allPhotos.filter(p => !p.uploaded);
+        if (pending.length > 0) {
+          const folderPath = buildPhotoFolderPath(session, sample);
+          const { folderUrl, uploadedIds } = await uploadPhotosToGas(session.gasUrl, sampleId, pending, folderPath);
+          for (const id of uploadedIds) await markPhotoUploaded(id);
+          if (folderUrl && !sample.photosDriveLink) {
+            sample.photosDriveLink = folderUrl;
+            saveSample(sample);
+          }
         }
-      } catch { /* photo upload failed — Drive link stays blank */ }
+      } catch { /* photo upload failed — they stay marked unuploaded for online retry */ }
       enqueueBackup({ ...sample, action: 'upsertRow' });
-      scheduleFlush(session.gasUrl);
+      scheduleFlush(session.gasUrl, session);
     }
 
     showView('view-list');

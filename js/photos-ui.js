@@ -26,7 +26,7 @@ export function initPhotosUI(sampleId, isSwab) {
     getPhotosForSample(sampleId).then(photos => {
       photos.forEach(p => {
         const url = URL.createObjectURL(p.blob);
-        _pendingPhotos.push({ id: p.id, blob: p.blob, label: p.label, objectUrl: url, existing: true });
+        _pendingPhotos.push({ id: p.id, blob: p.blob, label: p.label, objectUrl: url, existing: true, uploaded: p.uploaded });
         addThumb(thumbsDiv, p.id, url, p.label);
       });
     });
@@ -81,8 +81,4 @@ export async function persistPendingPhotos(sampleId) {
 
 export function getPendingPhotoCount() {
   return _pendingPhotos.length;
-}
-
-export function getPendingPhotos() {
-  return [..._pendingPhotos];
 }
