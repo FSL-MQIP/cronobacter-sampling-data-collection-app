@@ -1,4 +1,4 @@
-import { getSession, saveSession, deriveInitials, getNextNumber, clearSamplesFromSession } from './session.js';
+import { getSession, saveSession, deriveInitials, peekNextNumber, updateCounters, clearSamplesFromSession } from './session.js';
 import { generateSampleId } from './sample-id.js';
 import { loadSamples, saveSample, deleteSample, clearAllSamples } from './storage.js';
 import { getCurrentPosition, reverseGeocode } from './geo.js';
@@ -107,6 +107,10 @@ function wireSessionForm() {
     const soil = parseInt(document.getElementById('startingSoil').value, 10);
     const swab = parseInt(document.getElementById('startingSwab').value, 10);
     const water = parseInt(document.getElementById('startingWater').value, 10);
+    // Editing an existing session must NOT reset the live counters — they stay
+    // continuous across days within the same session. Only a brand-new session
+    // initializes them from the starting numbers.
+    const existing = getSession();
     const session = {
       collectorName,
       initials: document.getElementById('initials').value.trim().toUpperCase(),
@@ -115,7 +119,9 @@ function wireSessionForm() {
       labEmail: document.getElementById('labEmail').value.trim(),
       gasUrl: document.getElementById('gasUrl').value.trim(),
       startingSoil: soil, startingSwab: swab, startingWater: water,
-      nextSoil: soil, nextSwab: swab, nextWater: water,
+      nextSoil: existing?.nextSoil ?? soil,
+      nextSwab: existing?.nextSwab ?? swab,
+      nextWater: existing?.nextWater ?? water,
     };
     saveSession(session);
     showView('view-list');
@@ -268,6 +274,20 @@ function openTypeSelector() {
   document.querySelector('.type-btn[data-type="swab"]').classList.toggle('hidden', mode !== 'urban');
 }
 
+// Rebuild the header sample ID from the editable number for the current type.
+function updateDisplayId(num) {
+  const session = getSession();
+  const mode = session.mode || 'urban';
+  document.getElementById('display-sample-id').textContent =
+    generateSampleId(session.state, session.initials, num, currentType, mode);
+}
+
+// Extract the numeric part from a generated sample ID (state-initials-NUMBER_MODE_TYPE).
+function parseNumberFromId(sampleId) {
+  const match = /-(\d+)_/.exec(sampleId);
+  return match ? parseInt(match[1], 10) : '';
+}
+
 function openForm(type, existingSample = null) {
   currentType = type;
   editingId = existingSample ? existingSample.id : null;
@@ -300,9 +320,14 @@ function openForm(type, existingSample = null) {
     fillFormFromSample(existingSample);
   } else {
     document.getElementById('sample-form').reset();
-    const num = getNextNumber(type);
-    const sampleId = generateSampleId(session.state, session.initials, num, type, mode);
-    document.getElementById('display-sample-id').textContent = sampleId;
+    // Peek the next number — it is only consumed when the sample is saved, so
+    // abandoning the form never burns a number. The field is editable so an
+    // inaccurate number can be corrected before saving.
+    const num = peekNextNumber(type);
+    const numberInput = document.getElementById('f-sample-number');
+    numberInput.readOnly = false;
+    numberInput.value = num;
+    updateDisplayId(num);
     document.getElementById('f-date').value = todayString();
     document.getElementById('f-time').value = nowTimeString();
     document.getElementById('f-collectors').value = session.collectorName;
@@ -314,6 +339,11 @@ function openForm(type, existingSample = null) {
 
 function fillFormFromSample(s) {
   document.getElementById('display-sample-id').textContent = s.sampleId;
+  // The number of an already-saved sample is shown but locked — correction is
+  // only offered before a sample is first saved.
+  const numberInput = document.getElementById('f-sample-number');
+  numberInput.value = parseNumberFromId(s.sampleId);
+  numberInput.readOnly = true;
   document.getElementById('f-date').value = dmyToInputDate(s.date);
   document.getElementById('f-time').value = s.time;
   document.getElementById('f-collectors').value = s.collectors;
@@ -383,6 +413,12 @@ function wireFormButtons() {
     document.getElementById('surface-type-other-wrap').classList.toggle('hidden', this.value !== 'Other');
   });
 
+  // Keep the header sample ID in sync as the (editable) number is corrected.
+  document.getElementById('f-sample-number').addEventListener('input', function () {
+    if (editingId) return;
+    updateDisplayId(this.value);
+  });
+
   document.getElementById('sample-form').addEventListener('submit', async e => {
     e.preventDefault();
     const saveBtn = document.getElementById('btn-save-sample');
@@ -390,7 +426,19 @@ function wireFormButtons() {
     saveBtn.disabled = true;
     saveBtn.textContent = 'Saving…';
     const session = getSession();
-    const sampleId = document.getElementById('display-sample-id').textContent;
+    let sampleId, savedNumber;
+    if (editingId) {
+      sampleId = document.getElementById('display-sample-id').textContent;
+    } else {
+      savedNumber = parseInt(document.getElementById('f-sample-number').value, 10);
+      if (!Number.isInteger(savedNumber) || savedNumber < 1) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save Sample';
+        alert('Please enter a valid sample number.');
+        return;
+      }
+      sampleId = generateSampleId(session.state, session.initials, savedNumber, currentType, session.mode || 'urban');
+    }
 
     const sample = {
       id: editingId || crypto.randomUUID(),
@@ -420,6 +468,10 @@ function wireFormButtons() {
 
     try { await persistPendingPhotos(sampleId); } catch { /* IndexedDB unavailable — skip local photo storage */ }
     saveSample(sample);
+
+    // Consume the number only now that the sample is saved, advancing the counter
+    // past whatever number was actually used (handles manual corrections too).
+    if (!editingId) updateCounters(currentType, savedNumber + 1);
 
     // Upload photos to Drive and queue sheet backup — both best-effort, never block save
     if (session.gasUrl) {

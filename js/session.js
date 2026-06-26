@@ -24,6 +24,17 @@ export function getNextNumber(type) {
   return num;
 }
 
+// Returns the next number for a type WITHOUT consuming it. The counter is only
+// advanced when a sample is actually saved (see updateCounters), so opening and
+// abandoning the form never burns a number.
+export function peekNextNumber(type) {
+  const session = getSession();
+  if (!session) throw new Error('No active session');
+  const counterKey = { soil: 'nextSoil', swab: 'nextSwab', water: 'nextWater' }[type];
+  if (!counterKey) throw new Error(`Unknown sample type: ${type}`);
+  return session[counterKey];
+}
+
 export function updateCounters(type, value) {
   const session = getSession();
   if (!session) throw new Error('No active session');

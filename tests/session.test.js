@@ -1,4 +1,4 @@
-import { deriveInitials, saveSession, getSession, updateCounters, getNextNumber } from '../js/session.js';
+import { deriveInitials, saveSession, getSession, updateCounters, getNextNumber, peekNextNumber } from '../js/session.js';
 
 beforeEach(() => localStorage.clear());
 
@@ -29,6 +29,23 @@ test('getNextNumber returns correct counter and increments', () => {
 
 test('getNextNumber throws when no session exists', () => {
   expect(() => getNextNumber('soil')).toThrow('No active session');
+});
+
+test('peekNextNumber returns counter without incrementing it', () => {
+  const session = { nextSoil: 5, nextSwab: 1, nextWater: 2, collectorName: '', initials: '', state: '', labEmail: '', gasUrl: '', startingSoil: 1, startingSwab: 1, startingWater: 1 };
+  saveSession(session);
+  expect(peekNextNumber('soil')).toBe(5);
+  expect(peekNextNumber('soil')).toBe(5);
+  expect(getSession().nextSoil).toBe(5);
+});
+
+test('peekNextNumber throws when no session exists', () => {
+  expect(() => peekNextNumber('soil')).toThrow('No active session');
+});
+
+test('peekNextNumber throws on unknown type', () => {
+  saveSession({ nextSoil: 1, nextSwab: 1, nextWater: 1 });
+  expect(() => peekNextNumber('unknown')).toThrow('Unknown sample type: unknown');
 });
 
 test('getNextNumber throws on unknown type', () => {
